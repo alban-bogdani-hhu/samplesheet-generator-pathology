@@ -42,3 +42,4 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 ## Changelog
 
 - **2026-08-07** — D-001 … D-012 recorded; O-001 … O-009 opened. D-002 closed by Kai's answer.
+- **2026-08-10** — Phase 0 closed.

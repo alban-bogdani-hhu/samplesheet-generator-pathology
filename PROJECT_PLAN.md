@@ -13,7 +13,7 @@
 | Current phase | Phase 0 — Environment & repository |
 | Current branch | `develop` |
 | Version | `v0.0.1` |
-| Last updated | 2026-08-07 |
+| Last updated | 2026-08-10 |
 
 ## Scope
 
@@ -145,9 +145,9 @@ templates/wes.csv          data/udp_indexes.csv
 - [x] Frozen index table `data/udp_indexes.csv` + provenance script
 - [x] WES template `templates/wes.csv`
 - [x] Reference fixture (anonymized) + testthat harness
-- [ ] `git init`, `develop` branch, first commit, push to GitHub
-- [ ] `renv::init()`, lockfile committed
-- [ ] Placeholder app launches and loads all three runtime deps
+- [x] `git init`, `develop` branch, first commit, push to GitHub
+- [x] `renv::init()`, lockfile committed
+- [x] Placeholder app launches and loads all three runtime deps
 
 ### Phase 1 — Core generator (`v0.1.0`)
 - [ ] `R/indexes.R` — load table, resolve index name → i7/i5, list available names

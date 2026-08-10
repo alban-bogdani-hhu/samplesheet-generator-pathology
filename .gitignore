@@ -23,3 +23,6 @@ data-raw/*.xlsx
 .DS_Store
 Thumbs.db
 desktop.ini
+PROJECT_PLAN.html
+*.html
+/PROJECT_PLAN.html
