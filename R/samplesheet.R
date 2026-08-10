@@ -12,10 +12,38 @@
 
 #' Render the fixed sections from the template, substituting RunName.
 #'
-#' @return character vector of lines, up to and including the
-#'   "Sample_ID,index,index2,Sample_Project" header row.
+#' Reads templates/wes.csv and replaces the {{RUNNAME}} placeholder. An empty
+#' or missing run name is written as the literal string configured in
+#' CONFIG$empty_runname_value -- "NA" per Kai's request (D-002).
+#'
+#' IMPORTANT (D-002): that value is the character string "NA", never R's logical
+#' NA. This function guards against R's NA reaching the output: is.na() catches
+#' it and it is replaced by the configured string, so the header can never
+#' silently become "RunName," with an empty field.
+#'
+#' @param run_name Character scalar, or NULL/NA/"" for the empty case.
+#' @param cfg      Config list.
+#' @return Character vector of template lines, {{RUNNAME}} substituted.
 render_template <- function(run_name = NULL, cfg = CONFIG) {
-  stop("not implemented -- Phase 1")
+  path <- cfg$template
+  if (!file.exists(path)) {
+    stop("Sheet template not found at: ", path, call. = FALSE)
+  }
+  
+  # Read raw so we control line handling ourselves (see write_samplesheet).
+  raw   <- readChar(path, file.size(path), useBytes = TRUE)
+  lines <- strsplit(raw, "\r\n", fixed = TRUE)[[1]]
+  
+  # Normalise the run name to a single character value.
+  # NULL, NA (logical or character), or "" all become the configured literal.
+  if (is.null(run_name) || length(run_name) == 0L ||
+      is.na(run_name) || !nzchar(run_name)) {
+    run_name <- cfg$empty_runname_value
+  } else if (length(run_name) != 1L) {
+    stop("run_name must be a single value.", call. = FALSE)
+  }
+  
+  gsub(cfg$runname_token, run_name, lines, fixed = TRUE)
 }
 
 #' Build the complete sheet as a character vector of lines.
