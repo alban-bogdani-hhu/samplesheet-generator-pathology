@@ -2,11 +2,6 @@
 # working directory is not reliably the project root, so we hand render_template
 # an absolute template path resolved via test_path(), which is correct
 # regardless of wd -- the same approach proj_file() uses in test-indexes.R.
-test_cfg <- function() {
-  cfg <- CONFIG
-  cfg$template <- testthat::test_path("..", "..", CONFIG$template)
-  cfg
-}
 
 test_that("render_template substitutes a provided run name", {
   out <- render_template("20260101_TEST", test_cfg())
