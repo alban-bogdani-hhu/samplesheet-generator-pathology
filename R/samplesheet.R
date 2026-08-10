@@ -46,16 +46,65 @@ render_template <- function(run_name = NULL, cfg = CONFIG) {
   gsub(cfg$runname_token, run_name, lines, fixed = TRUE)
 }
 
-#' Build the complete sheet as a character vector of lines.
+#' Build the complete sample sheet as a character vector of lines.
 #'
-#' @param samples data.frame(sample_id, index_name, i7, i5, sample_project)
+#' Renders the fixed template sections (via render_template) and appends one
+#' data row per sample. Row order follows the input order of `samples` -- the
+#' caller (UI) controls it, and the byte-for-byte test depends on it.
+#'
+#' Column order is fixed by the template's data header:
+#'   Sample_ID, index (=i7), index2 (=i5), Sample_Project
+#'
+#' @param samples data.frame with columns sample_id, i7, i5, sample_project.
+#' @param run_name Character scalar, or NULL/NA/"" for the empty case (D-002).
+#' @param cfg      Config list.
+#' @return Character vector of all sheet lines (no trailing empty element).
 build_samplesheet <- function(samples, run_name = NULL, cfg = CONFIG) {
-  stop("not implemented -- Phase 1")
+  required <- c("sample_id", "i7", "i5", "sample_project")
+  missing  <- setdiff(required, names(samples))
+  if (length(missing)) {
+    stop("samples is missing column(s): ", paste(missing, collapse = ", "),
+         call. = FALSE)
+  }
+  if (nrow(samples) == 0L) {
+    stop("Cannot build a sample sheet with zero samples.", call. = FALSE)
+  }
+  
+  header <- render_template(run_name, cfg)
+  
+  data_rows <- paste(
+    samples$sample_id,
+    samples$i7,
+    samples$i5,
+    samples$sample_project,
+    sep = ","
+  )
+  
+  c(header, data_rows)
 }
 
-#' Write lines to disk with CRLF endings and no trailing blank line.
+#' Write sheet lines to disk with CRLF endings and no trailing blank line.
+#'
+#' CRLF TRAP (see file header): R's text connections translate line endings, so
+#' writeLines() on a default connection yields platform-dependent bytes. We open
+#' a BINARY connection and write explicit cfg$line_ending ("\r\n") ourselves, so
+#' the output is identical on Windows and Linux. The file ends with exactly one
+#' line terminator after the last row -- matching Illumina's format and the
+#' reference sheet (no extra blank line).
+#'
+#' @param lines Character vector of sheet lines (from build_samplesheet).
+#' @param path  Output file path.
+#' @param cfg   Config list.
+#' @return `path`, invisibly.
 write_samplesheet <- function(lines, path, cfg = CONFIG) {
-  stop("not implemented -- Phase 1")
+  # One terminator after every line, including the last; no trailing blank line.
+  payload <- paste0(paste(lines, collapse = cfg$line_ending), cfg$line_ending)
+  
+  con <- file(path, open = "wb")            # binary: no line-ending translation
+  on.exit(close(con), add = TRUE)
+  writeBin(charToRaw(payload), con)
+  
+  invisible(path)
 }
 
 #' Export filename for a run (D-004).

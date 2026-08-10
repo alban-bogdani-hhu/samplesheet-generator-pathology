@@ -57,3 +57,54 @@ test_that("samplesheet_filename strips Windows-illegal characters", {
   expect_false(grepl("[/:]", out))
   expect_match(out, "-samplesheet\\.csv$")
 })
+
+# --- build_samplesheet -----------------------------------------------------
+
+test_that("build_samplesheet appends one data row per sample, in order", {
+  samples <- data.frame(
+    sample_id      = c("A-26_1-T", "B-26_3-N"),
+    i7             = c("AAAAAAAAAA", "CCCCCCCCCC"),
+    i5             = c("GGGGGGGGGG", "TTTTTTTTTT"),
+    sample_project = c("WES_Patho", "WES_Patho"),
+    stringsAsFactors = FALSE
+  )
+  out <- build_samplesheet(samples, "RUN1", test_cfg())
+  
+  # data header present, then exactly the two rows in input order
+  hdr <- which(out == "Sample_ID,index,index2,Sample_Project")
+  expect_length(hdr, 1)
+  expect_equal(out[hdr + 1], "A-26_1-T,AAAAAAAAAA,GGGGGGGGGG,WES_Patho")
+  expect_equal(out[hdr + 2], "B-26_3-N,CCCCCCCCCC,TTTTTTTTTT,WES_Patho")
+  expect_equal(length(out), hdr + 2)   # nothing after the last row
+})
+
+test_that("build_samplesheet rejects missing columns and empty input", {
+  good <- data.frame(sample_id = "A", i7 = "A", i5 = "C",
+                     sample_project = "P", stringsAsFactors = FALSE)
+  expect_error(build_samplesheet(good[, -2], "R", test_cfg()), "missing column")
+  expect_error(build_samplesheet(good[0, ], "R", test_cfg()), "zero samples")
+})
+
+# --- write_samplesheet -----------------------------------------------------
+
+test_that("write_samplesheet produces CRLF and no trailing blank line", {
+  tmp <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp))
+  
+  write_samplesheet(c("line1", "line2", "last"), tmp, CONFIG)
+  
+  raw <- readChar(tmp, file.size(tmp), useBytes = TRUE)
+  expect_equal(raw, "line1\r\nline2\r\nlast\r\n")
+  # every line ends CRLF, file ends with exactly one CRLF
+  expect_true(endsWith(raw, "\r\n"))
+  expect_false(endsWith(raw, "\r\n\r\n"))
+})
+
+test_that("write_samplesheet writes bytes verbatim regardless of platform", {
+  tmp <- tempfile(fileext = ".csv")
+  on.exit(unlink(tmp))
+  write_samplesheet("x", tmp, CONFIG)
+  
+  # exactly 3 bytes: 'x', CR, LF -- no LF-only, no CRCRLF
+  expect_equal(file.size(tmp), 3)
+})
