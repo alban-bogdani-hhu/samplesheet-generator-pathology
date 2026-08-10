@@ -1,0 +1,22 @@
+[Header]
+FileFormatVersion,2
+RunName,{{RUNNAME}}
+RunDescription,1.5B WES Pathologie Lauf
+InstrumentType,NovaSeq X Plus
+
+[Reads]
+Read1Cycles,151
+Read2Cycles,151
+Index1Cycles,10
+Index2Cycles,10
+
+[BCLConvert_Settings]
+BarcodeMismatchesIndex1,1
+BarcodeMismatchesIndex2,1
+OverrideCycles,U7N1Y143;I10;I10;U7N1Y143
+CreateFastqForIndexReads,False
+NoLaneSplitting,True
+FastqCompressionFormat,gzip
+
+[BCLConvert_Data]
+Sample_ID,index,index2,Sample_Project

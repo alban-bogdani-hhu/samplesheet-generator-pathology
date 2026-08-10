@@ -1,0 +1,10 @@
+Package: samplesheet.generator.pathology
+Type: Shiny
+Title: SampleSheet Generator (Pathologie, WES)
+Version: 0.0.1
+Imports:
+    shiny,
+    bslib,
+    DT
+Suggests:
+    testthat

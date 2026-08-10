@@ -1,0 +1,25 @@
+# R
+.Rhistory
+.RData
+.Rproj.user/
+*.Rproj.user
+
+# renv: the library itself is not committed; renv.lock is.
+renv/library/
+renv/staging/
+renv/local/
+renv/python/
+renv/sandbox/
+
+# App output -- generated sample sheets must never land in git.
+# They contain patient-linked Sample_IDs (see docs/DECISIONS.md, D-012).
+*-samplesheet.csv
+!tests/testthat/fixtures/reference-samplesheet.csv
+
+# Vendor source workbook (large, not needed at runtime; see data-raw/)
+data-raw/*.xlsx
+
+# OS
+.DS_Store
+Thumbs.db
+desktop.ini
