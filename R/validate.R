@@ -51,11 +51,32 @@ validate_sample_id <- function(id, cfg = CONFIG) {
   problems
 }
 
-#' Soft check against the Pathology naming pattern.
+#' Soft check against the Pathology naming pattern (warning tier, D-005).
 #'
-#' @return character(0) or a single warning message.
+#' The pattern (cfg$id_pattern) is inferred from one run, not confirmed by Kai
+#' (open item O-001), so a mismatch is a WARNING, not a block: a legitimate
+#' control or unusual sample must still be addable. When cfg$id_pattern_mode is
+#' "off", this returns nothing.
+#'
+#' Promotion to a hard block is a one-line config change (id_pattern_mode ->
+#' "block"), handled by the caller (validate_run), not here -- this function
+#' only reports whether the pattern matches.
+#'
+#' @param id  A single Sample_ID string.
+#' @param cfg Config list (id_pattern, id_pattern_mode).
+#' @return character(0) if it matches or checking is off; else one message.
 check_id_pattern <- function(id, cfg = CONFIG) {
-  stop("not implemented -- Phase 2")
+  if (identical(cfg$id_pattern_mode, "off")) {
+    return(character(0))
+  }
+  if (length(id) != 1L || is.na(id) || !nzchar(id)) {
+    # Empties are validate_sample_id's job; nothing to say about the pattern.
+    return(character(0))
+  }
+  if (grepl(cfg$id_pattern, id)) {
+    return(character(0))
+  }
+  sprintf("Sample_ID '%s' does not match the expected Pathology pattern.", id)
 }
 
 #' Run-level checks across all rows.

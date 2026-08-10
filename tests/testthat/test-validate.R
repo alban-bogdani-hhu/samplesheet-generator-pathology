@@ -40,3 +40,28 @@ test_that("validate_sample_id can report multiple problems at once", {
   long_bad <- paste0(paste(rep("A", CONFIG$id_max_nchar), collapse = ""), " x")
   expect_gte(length(validate_sample_id(long_bad)), 2)
 })
+
+
+
+test_that("check_id_pattern passes a conforming ID", {
+  expect_equal(check_id_pattern("1234-26_3-N"), character(0))
+  expect_equal(check_id_pattern("123-26_1-T"),  character(0))
+})
+
+test_that("check_id_pattern warns on a non-conforming ID", {
+  expect_length(check_id_pattern("NA12878"), 1)
+  expect_length(check_id_pattern("1234-26_3-X"), 1)   # X not N/T
+  expect_match(check_id_pattern("weird"), "does not match")
+})
+
+test_that("check_id_pattern is silent when mode is off", {
+  cfg <- CONFIG
+  cfg$id_pattern_mode <- "off"
+  expect_equal(check_id_pattern("anything-goes", cfg), character(0))
+})
+
+test_that("check_id_pattern says nothing about empty input", {
+  # empties are validate_sample_id's job
+  expect_equal(check_id_pattern(""), character(0))
+  expect_equal(check_id_pattern(NA_character_), character(0))
+})
