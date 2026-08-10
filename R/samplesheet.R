@@ -58,7 +58,32 @@ write_samplesheet <- function(lines, path, cfg = CONFIG) {
   stop("not implemented -- Phase 1")
 }
 
-#' Export filename for a run (D-004). Sanitizes for Windows.
+#' Export filename for a run (D-004).
+#'
+#' Builds "<RunName>-samplesheet.csv", matching Pathology's existing convention
+#' (lowercase, hyphen). The run name is sanitised to Windows-safe characters,
+#' since it is free text and may contain characters illegal in filenames.
+#'
+#' Empty/NULL/NA run name -> the configured empty value ("NA", D-002), giving
+#' "NA-samplesheet.csv": deliberately visible as unfinished, since a human must
+#' still fill the run name in.
+#'
+#' @param run_name Character scalar, or NULL/NA/"" for the empty case.
+#' @param cfg      Config list.
+#' @return A single filename string.
 samplesheet_filename <- function(run_name = NULL, cfg = CONFIG) {
-  stop("not implemented -- Phase 1")
+  if (is.null(run_name) || length(run_name) == 0L ||
+      is.na(run_name) || !nzchar(run_name)) {
+    run_name <- cfg$empty_runname_value
+  } else if (length(run_name) != 1L) {
+    stop("run_name must be a single value.", call. = FALSE)
+  }
+  
+  safe <- gsub(cfg$filename_safe_chars, "", run_name)
+  if (!nzchar(safe)) {
+    # Run name was all illegal characters -> fall back to the empty literal.
+    safe <- cfg$empty_runname_value
+  }
+  
+  sprintf(cfg$filename_pattern, safe)
 }

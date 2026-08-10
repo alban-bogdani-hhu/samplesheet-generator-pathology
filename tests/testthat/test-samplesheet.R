@@ -38,3 +38,22 @@ test_that("render_template ends at the data header", {
   out <- render_template("X", test_cfg())
   expect_equal(out[length(out)], "Sample_ID,index,index2,Sample_Project")
 })
+
+test_that("samplesheet_filename builds the D-004 pattern", {
+  expect_equal(samplesheet_filename("20260101_LH00535", CONFIG),
+               "20260101_LH00535-samplesheet.csv")
+})
+
+test_that("samplesheet_filename falls back on empty run name", {
+  expected <- sprintf(CONFIG$filename_pattern, CONFIG$empty_runname_value)
+  for (empty in list(NULL, "", NA_character_)) {
+    expect_equal(samplesheet_filename(empty, CONFIG), expected)
+  }
+})
+
+test_that("samplesheet_filename strips Windows-illegal characters", {
+  # slash, colon, etc. must not survive into a filename
+  out <- samplesheet_filename("bad/name:v1", CONFIG)
+  expect_false(grepl("[/:]", out))
+  expect_match(out, "-samplesheet\\.csv$")
+})
