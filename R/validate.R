@@ -79,12 +79,93 @@ check_id_pattern <- function(id, cfg = CONFIG) {
   sprintf("Sample_ID '%s' does not match the expected Pathology pattern.", id)
 }
 
-#' Run-level checks across all rows.
+#' Run-level validation across all samples (D-005).
 #'
-#' Duplicate Sample_ID, duplicate index pair, index length vs. Index1Cycles /
-#' Index2Cycles from the template.
+#' Per-ID checks (validate_sample_id, check_id_pattern) run for every row, then
+#' cross-row checks that only make sense for the pool as a whole:
+#'   - duplicate Sample_ID           (BCL Convert requires unique IDs)  -> error
+#'   - duplicate (i7, i5) index pair (a read can't be assigned)         -> error
+#'   - index length != template cycles (demux misreads the barcode)     -> error
 #'
-#' @return list(errors = <chr>, warnings = <chr>)
+#' Index length is derived from the template's Index1Cycles / Index2Cycles, so
+#' there is one source of truth -- a WES/WGS template with different cycles
+#' needs no code change here.
+#'
+#' @param samples data.frame(sample_id, index_name, i7, i5, sample_project).
+#' @param cfg     Config list.
+#' @return list(errors = <chr>, warnings = <chr>). errors block; warnings don't.
 validate_run <- function(samples, cfg = CONFIG) {
-  stop("not implemented -- Phase 2")
+  errors   <- character(0)
+  warnings <- character(0)
+  
+  if (nrow(samples) == 0L) {
+    return(list(errors = "No samples to validate.", warnings = character(0)))
+  }
+  
+  # --- per-ID checks, aggregated over rows ---------------------------------
+  for (i in seq_len(nrow(samples))) {
+    id <- samples$sample_id[i]
+    id_errs  <- validate_sample_id(id, cfg)
+    if (length(id_errs)) {
+      errors <- c(errors, sprintf("Row %d (%s): %s", i, id, id_errs))
+    }
+    id_warns <- check_id_pattern(id, cfg)
+    if (length(id_warns)) {
+      warnings <- c(warnings, sprintf("Row %d: %s", i, id_warns))
+    }
+  }
+  
+  # --- duplicate Sample_ID -------------------------------------------------
+  dup_ids <- unique(samples$sample_id[duplicated(samples$sample_id)])
+  if (length(dup_ids)) {
+    errors <- c(errors, sprintf(
+      "Duplicate Sample_ID: %s", paste(dup_ids, collapse = ", ")))
+  }
+  
+  # --- duplicate index pair ------------------------------------------------
+  pairs <- paste(samples$i7, samples$i5, sep = "+")
+  dup_pairs <- unique(pairs[duplicated(pairs)])
+  if (length(dup_pairs)) {
+    # report by the sample IDs sharing each pair, which is what a user can act on
+    for (p in dup_pairs) {
+      who <- samples$sample_id[pairs == p]
+      errors <- c(errors, sprintf(
+        "Duplicate index pair used by: %s", paste(who, collapse = ", ")))
+    }
+  }
+  
+  # --- index length vs. template cycles ------------------------------------
+  cycles <- template_index_cycles(cfg)   # c(i7 = <n>, i5 = <n>)
+  bad_i7 <- which(nchar(samples$i7) != cycles[["i7"]])
+  bad_i5 <- which(nchar(samples$i5) != cycles[["i5"]])
+  if (length(bad_i7)) {
+    errors <- c(errors, sprintf(
+      "i7 length != Index1Cycles (%d) for: %s",
+      cycles[["i7"]], paste(samples$sample_id[bad_i7], collapse = ", ")))
+  }
+  if (length(bad_i5)) {
+    errors <- c(errors, sprintf(
+      "i5 length != Index2Cycles (%d) for: %s",
+      cycles[["i5"]], paste(samples$sample_id[bad_i5], collapse = ", ")))
+  }
+  
+  list(errors = errors, warnings = warnings)
+}
+
+#' Read Index1Cycles / Index2Cycles from the template (single source of truth).
+#'
+#' @return named integer vector c(i7 = <n>, i5 = <n>).
+template_index_cycles <- function(cfg = CONFIG) {
+  raw   <- readChar(cfg$template, file.size(cfg$template), useBytes = TRUE)
+  lines <- strsplit(raw, "\r\n", fixed = TRUE)[[1]]
+  
+  pick <- function(key) {
+    hit <- grep(paste0("^", key, ","), lines, value = TRUE)
+    if (length(hit) != 1L) {
+      stop("Template does not contain a single '", key, "' line.", call. = FALSE)
+    }
+    as.integer(sub(paste0("^", key, ","), "", hit))
+  }
+  
+  c(i7 = pick("Index1Cycles"), i5 = pick("Index2Cycles"))
 }
