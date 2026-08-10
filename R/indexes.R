@@ -49,14 +49,39 @@ load_index_table <- function(path = CONFIG$index_table) {
   tbl
 }
 
-available_indexes <- function(tbl, used = character(0)) {
-  stop("not implemented -- Phase 1")
-}
-
-#' Resolve one index name to its sample-sheet sequences.
+#' Index names available for assignment in the current run.
 #'
-#' @return list(i7 = <chr>, i5 = <chr>). Errors if the name is unknown --
-#'   an unknown index must never pass silently.
+#' Returns index names not yet used, preserving table order (UDP0001, UDP0002,
+#' ...), so the dropdown reads predictably. Implements D-010: excluding used
+#' indexes at the UI makes a duplicate index pair unrepresentable rather than
+#' merely caught at validation.
+#'
+#' Toggled by CONFIG$exclude_used_indexes; when FALSE, all names are returned
+#' (the validator remains the backstop against duplicates).
+#'
+#' @param tbl   Index table from load_index_table().
+#' @param used  Character vector of index names already assigned this run.
+#' @return Character vector of selectable index names, in table order.
+available_indexes <- function(tbl, used = character(0)) {
+  all_names <- tbl$index_name
+  if (!isTRUE(CONFIG$exclude_used_indexes)) {
+    return(all_names)
+  }
+  setdiff(all_names, used)
+}
 resolve_index <- function(tbl, index_name) {
-  stop("not implemented -- Phase 1")
+  if (length(index_name) != 1L || is.na(index_name) || !nzchar(index_name)) {
+    stop("resolve_index() needs a single non-empty index name.", call. = FALSE)
+  }
+  
+  row <- match(index_name, tbl$index_name)
+  if (is.na(row)) {
+    stop("Unknown index name: ", index_name,
+         "\nNot found in the index table.", call. = FALSE)
+  }
+  
+  list(
+    i7 = tbl[[CONFIG$i7_column]][row],
+    i5 = tbl[[CONFIG$i5_column]][row]
+  )
 }
