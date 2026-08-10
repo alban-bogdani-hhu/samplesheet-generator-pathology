@@ -12,7 +12,7 @@
 | Repo | `samplesheet-generator-pathology` |
 | Current phase | Phase 0 — Environment & repository |
 | Current branch | `develop` |
-| Version | `v0.0.1` |
+| Version | `v0.1.0` |
 | Last updated | 2026-08-10 |
 
 ## Scope
@@ -150,10 +150,10 @@ templates/wes.csv          data/udp_indexes.csv
 - [x] Placeholder app launches and loads all three runtime deps
 
 ### Phase 1 — Core generator (`v0.1.0`)
-- [ ] `R/indexes.R` — load table, resolve index name → i7/i5, list available names
-- [ ] `R/samplesheet.R` — render template, append data rows, CRLF writer
-- [ ] Test: byte-for-byte reproduction of the reference fixture (F-10)
-- [ ] Test: RunName empty → literal `NA` in the header (F-4)
+- [x] `R/indexes.R` — load table, resolve index name → i7/i5, list available names
+- [x] `R/samplesheet.R` — render template, append data rows, CRLF writer
+- [x] Test: byte-for-byte reproduction of the reference fixture (F-10)
+- [x] Test: RunName empty → literal `NA` in the header (F-4)
 
 ### Phase 2 — Validation (`v0.2.0`)
 - [ ] `R/validate.R` — Illumina hard rules (blocking)
