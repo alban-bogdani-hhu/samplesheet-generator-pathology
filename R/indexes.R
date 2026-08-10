@@ -69,6 +69,17 @@ available_indexes <- function(tbl, used = character(0)) {
   }
   setdiff(all_names, used)
 }
+
+#' Resolve one index name to its sample-sheet sequences.
+#'
+#' Looks the name up and returns the i7/i5 for the configured columns
+#' (CONFIG$i7_column, CONFIG$i5_column -- forward i5 for NovaSeq X Plus, D-003).
+#' An unknown name is a hard error, never a silent empty result: a blank index
+#' would send that sample's reads to Undetermined.
+#'
+#' @param tbl        Index table from load_index_table().
+#' @param index_name A single index name (e.g. "UDP0007").
+#' @return list(i7 = <chr>, i5 = <chr>).
 resolve_index <- function(tbl, index_name) {
   if (length(index_name) != 1L || is.na(index_name) || !nzchar(index_name)) {
     stop("resolve_index() needs a single non-empty index name.", call. = FALSE)
