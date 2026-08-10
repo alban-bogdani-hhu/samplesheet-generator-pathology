@@ -2,7 +2,7 @@
 # Validation. Two tiers (D-005):
 #   hard  -- Illumina rules; a violation fails at BCL Convert anyway -> block
 #   soft  -- Pathology Sample_ID pattern; inferred, not confirmed    -> warn
-# Phase 2 -- NOT YET IMPLEMENTED.
+# Phase 2 --IMPLEMENTED.
 # ---------------------------------------------------------------------------
 
 #' Check a single Sample_ID against Illumina's hard rules (blocking tier, D-005).

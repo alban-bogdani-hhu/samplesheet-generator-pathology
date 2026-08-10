@@ -10,9 +10,9 @@
 | Owner | Alban Bogdani |
 | Organization | Institut für Humangenetik, UKD |
 | Repo | `samplesheet-generator-pathology` |
-| Current phase | Phase 0 — Environment & repository |
+| Current phase | Phase 2 — Validation (complete) |
 | Current branch | `develop` |
-| Version | `v0.1.0` |
+| Version | `v0.2.0` |
 | Last updated | 2026-08-10 |
 
 ## Scope
@@ -156,10 +156,10 @@ templates/wes.csv          data/udp_indexes.csv
 - [x] Test: RunName empty → literal `NA` in the header (F-4)
 
 ### Phase 2 — Validation (`v0.2.0`)
-- [ ] `R/validate.R` — Illumina hard rules (blocking)
-- [ ] Pathology pattern soft warning, switchable via config
-- [ ] Run-level checks: duplicate Sample_ID, duplicate index pair, index length vs. cycles
-- [ ] Tests for each rule, including the reserved-word list
+- [x] `R/validate.R` — Illumina hard rules (blocking)
+- [x] Pathology pattern soft warning, switchable via config
+- [x] Run-level checks: duplicate Sample_ID, duplicate index pair, index length vs. cycles
+- [x] Tests for each rule, including the reserved-word list
 
 ### Phase 3 — Shiny UI (`v0.3.0`)
 - [ ] Add / remove sample; dropdown excludes used indexes (F-1..F-3)
@@ -199,3 +199,6 @@ templates/wes.csv          data/udp_indexes.csv
 - **2026-08-07** — initial plan created (`v0.0.1`). Scope fixed after Kai answered the five
   blocking questions: the app is interactive (Shiny), there is no input file to parse, and
   the fixed sheet sections are constant across runs.
+- **2026-08-10** — Phase 1 complete (`v0.1.0`): core generator, byte-for-byte acceptance test.
+- **2026-08-10** — Phase 2 complete (`v0.2.0`): two-tier validation, run-level checks,
+  template-derived index length. Export wiring deferred to Phase 3 (server owns the gate).

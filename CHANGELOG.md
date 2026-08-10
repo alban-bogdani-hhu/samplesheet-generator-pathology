@@ -3,6 +3,26 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/); versioning is semantic.
 
+## [0.2.0] - 2026-08-10
+
+### Added
+- Validation layer (`R/validate.R`), two tiers per D-005:
+  - `validate_sample_id()` — Illumina's hard rules (length, allowed characters,
+    separator placement, reserved words); blocking tier.
+  - `check_id_pattern()` — soft warning against the Pathology naming pattern,
+    switchable via `id_pattern_mode` (`warn` / `off`), never blocking.
+  - `validate_run()` — cross-row checks: duplicate Sample_ID, duplicate index
+    pair (reported by the samples sharing it), and index length vs. the
+    template's `Index1Cycles` / `Index2Cycles`.
+  - `template_index_cycles()` — derives expected index length from the template,
+    so the template is the single source of truth (no hardcoded 10).
+- Tests for every rule, including reserved words, separator edge cases, and the
+  multi-problem aggregation path.
+
+### Notes
+- Validation is implemented but not yet wired into export; the Shiny server
+  (Phase 3) will gate export on `validate_run` — errors block, warnings do not.
+
 ## [0.1.0] - 2026-08-10
 
 ### Added
