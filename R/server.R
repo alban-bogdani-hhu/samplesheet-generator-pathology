@@ -30,9 +30,9 @@ app_server <- function(input, output, session) {
   # Names already used this run -> excluded from the dropdown (D-010).
   used_names <- shiny::reactive(samples()$index_name)
   
-  # Keep the dropdown in sync with what's still available (D-010).
-  # Show the sequences alongside the name; the selected *value* stays the
-  # bare UDP name, so resolve_index() and everything downstream are unaffected.
+  # Keep the dropdown in sync with available indexes (D-010), searchable.
+  # Label carries UDP + both sequences, so typing any of them filters.
+  # Value stays the bare UDP name -> resolve_index() unaffected.
   shiny::observe({
     avail <- available_indexes(index_tbl, used_names())
     rows  <- match(avail, index_tbl$index_name)
@@ -45,7 +45,12 @@ app_server <- function(input, output, session) {
     )
     choices <- stats::setNames(avail, labels)   # names = shown, values = UDP
     
-    shiny::updateSelectInput(session, "index_name", choices = choices)
+    shiny::updateSelectizeInput(
+      session, "index_name",
+      choices  = choices,
+      selected = character(0),   # don't auto-pick; force a deliberate choice
+      server   = TRUE
+    )
   })
   
   # --- Add ------------------------------------------------------------------
@@ -90,13 +95,24 @@ app_server <- function(input, output, session) {
   
   # --- Live validation ------------------------------------------------------
   # Re-runs whenever the pool changes. Single source of truth for both the
-  # messages below and (step 3) the export gate, so they can never disagree.
+  # messages below and the export gate, so they can never disagree.
   validation <- shiny::reactive({
     df <- samples()
     if (nrow(df) == 0L) {
       return(list(errors = character(0), warnings = character(0)))
     }
     validate_run(df, CONFIG)
+  })
+  
+  # --- Export button gate ---------------------------------------------------
+  # Disable the export button whenever there are no samples or any errors, so
+  # the download dialog never even opens on an invalid run. The download
+  # handler keeps its own guard as a backstop.
+  shiny::observe({
+    shinyjs::toggleState(
+      "export",
+      condition = nrow(samples()) > 0L && length(validation()$errors) == 0L
+    )
   })
   
   output$validation_msgs <- shiny::renderUI({
@@ -138,6 +154,40 @@ app_server <- function(input, output, session) {
     
     shiny::tagList(err_block, warn_block, export_note)
   })
+  
+  # --- Export hint ----------------------------------------------------------
+  # Text companion to the button's enabled/disabled state: explains WHY export
+  # is locked (no samples / errors) or that it's ready.
+  output$export_hint <- shiny::renderUI({
+    if (nrow(samples()) == 0L) {
+      shiny::helpText("Noch keine Proben.")
+    } else if (length(validation()$errors)) {
+      shiny::helpText(
+        shiny::span(class = "text-danger",
+                    "Export gesperrt: bitte zuerst die Fehler beheben."))
+    } else {
+      shiny::helpText(
+        shiny::span(class = "text-success", "Bereit zum Export."))
+    }
+  })
+  
+  # --- Download handler -----------------------------------------------------
+  # The guard here -- not the button -- is the actual gate: even if the button
+  # is clicked while errors exist, nothing is written. Validation is enforced
+  # at the moment of export, from the same validate_run used everywhere else.
+  output$export <- shiny::downloadHandler(
+    filename = function() samplesheet_filename(input$run_name, CONFIG),
+    content  = function(file) {
+      v <- validate_run(samples(), CONFIG)
+      if (length(v$errors)) {
+        shiny::showNotification(
+          "Export gesperrt: es bestehen noch Fehler.", type = "error")
+        stop("Export blocked: unresolved validation errors.")
+      }
+      lines <- build_samplesheet(samples(), input$run_name, CONFIG)
+      write_samplesheet(lines, file, CONFIG)
+    }
+  )
   
   # --- Table ----------------------------------------------------------------
   output$samples <- DT::renderDT(

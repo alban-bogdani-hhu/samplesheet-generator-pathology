@@ -24,6 +24,8 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 | D-010 | The index dropdown offers only indexes not yet used in the current run | BCL Convert fails on duplicate index pairs, so uniqueness is enforced downstream regardless; better to make the error unrepresentable at input time. Validator keeps the check as a backstop. | Active | `R/config.R: exclude_used_indexes` |
 | D-011 | `data/udp_indexes.csv` is committed as a frozen artifact; regenerated only by `data-raw/freeze_index_table.R` | Vendor reference data does not change between runs. Keeps `openxlsx` out of the runtime dependency set and makes the table diffable and auditable. File carries the source SHA-256. | Active | Re-run the `data-raw` script |
 | D-012 | Only the **anonymized** reference sheet is committed as a test fixture | Real accession numbers in git history are effectively permanent, even in a private repo. | Active | Architectural — never commit real IDs |
+| D-013 | Added `shinyjs` as a runtime dependency, solely to disable the export button on invalid runs (no samples / validation errors) | Preventing an invalid clinical export from even starting is the correct gate; the download-handler guard alone still opened the OS save-dialog before refusing. `shinyjs` is small, standard, and installs cleanly offline — an acceptable exception to the minimal-dependency rule (D-007) for a safety-adjacent interaction. | Active | Remove `shinyjs`; revert to handler-guard-only |
+| D-014 | Index dropdown is a searchable `selectizeInput`; the label carries UDP name + both sequences so typing any of them filters | Selecting a barcode by eye among 96 rows was slow and error-prone in real use. Search by name or sequence makes assignment fast. No custom JS — built-in selectize search only. | Active | Revert to `selectInput` |
 
 ## Open items
 
@@ -38,8 +40,12 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 | O-007 | Re-import edge cases: unknown index pair (hand-edited file / other index set); re-validate or trust imported Sample_IDs | Phase 5 design | Decide when the parser exists |
 | O-008 | Are index sets 2–4 ever used, or sets mixed within a run? (2.5) | Whether the frozen table needs to span plates | Ask with O-001 |
 | O-009 | Regulatory requirements — IVDR / accreditation / QM: versioning, logging, four-eyes release? (9.4) | Could add hard requirements late | Ask before Phase 4 |
-
+| O-010 | Inline editing of a row's Sample_ID in the preview table (fix a typo without remove-and-re-add). Scope: Sample_ID column only; edits must write back to the samples() reactiveVal; other columns stay locked to preserve UDP↔sequence integrity. | Nice-to-have, post-MVP | Deferred by Alban, 2026-08 |
 ## Changelog
 
 - **2026-08-07** — D-001 … D-012 recorded; O-001 … O-009 opened. D-002 closed by Kai's answer.
 - **2026-08-10** — Phase 0 closed.
+- **2026-08-10** — Phase 1 closed (`v0.1.0`). Phase 2 closed (`v0.2.0`): D-005 tiers
+  implemented; pattern-to-blocking promotion still pending O-001. Validation-export
+  wiring assigned to Phase 3.
+  
