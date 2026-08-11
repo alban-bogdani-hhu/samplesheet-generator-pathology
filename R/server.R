@@ -1,30 +1,109 @@
 # ---------------------------------------------------------------------------
-# Shiny server. Phase 3 -- placeholder only.
+# Shiny server.
 #
-# State is in-memory for the session (D-001): nothing is written to disk except
-# the exported sample sheet.
+# State is in-memory for the session only (D-001): the sample list lives in a
+# reactiveVal and nothing is written to disk except the exported sheet.
+#
+# Each sample is stored RESOLVED -- sample_id, index_name, i7, i5,
+# sample_project -- exactly the shape build_samplesheet() and validate_run()
+# expect. Index sequences are resolved once, at Add.
 # ---------------------------------------------------------------------------
 
+SAMPLE_PROJECT <- "WES_Patho"   # constant per Kai; becomes config if that changes
+
 app_server <- function(input, output, session) {
-
-  # Placeholder: proves shiny + bslib + DT all load on the target machine.
-  output$samples <- DT::renderDT(
+  
+  index_tbl <- load_index_table()
+  
+  # The current run's samples. Empty frame with the exact target columns.
+  samples <- shiny::reactiveVal(
     data.frame(
-      Sample_ID    = character(0),
-      Index        = character(0),
-      i7           = character(0),
-      i5           = character(0),
+      sample_id      = character(0),
+      index_name     = character(0),
+      i7             = character(0),
+      i5             = character(0),
+      sample_project = character(0),
       stringsAsFactors = FALSE
-    ),
-    options = list(dom = "t"), rownames = FALSE
-  )
-
-  output$status <- shiny::renderText({
-    paste0(
-      "Skeleton v0.0.1 - noch keine Funktionalitaet.\n",
-      "R ", getRversion(), " | shiny ", utils::packageVersion("shiny"),
-      " | bslib ", utils::packageVersion("bslib"),
-      " | DT ", utils::packageVersion("DT")
     )
+  )
+  
+  # Names already used this run -> excluded from the dropdown (D-010).
+  used_names <- shiny::reactive(samples()$index_name)
+  
+  # Keep the dropdown in sync with what's still available (D-010).
+  # Show the sequences alongside the name; the selected *value* stays the
+  # bare UDP name, so resolve_index() and everything downstream are unaffected.
+  shiny::observe({
+    avail <- available_indexes(index_tbl, used_names())
+    rows  <- match(avail, index_tbl$index_name)
+    
+    labels <- sprintf(
+      "%s  ·  i7: %s  ·  i5: %s",
+      avail,
+      index_tbl[[CONFIG$i7_column]][rows],
+      index_tbl[[CONFIG$i5_column]][rows]
+    )
+    choices <- stats::setNames(avail, labels)   # names = shown, values = UDP
+    
+    shiny::updateSelectInput(session, "index_name", choices = choices)
+  })
+  
+  # --- Add ------------------------------------------------------------------
+  shiny::observeEvent(input$add, {
+    id <- trimws(input$sample_id)
+    nm <- input$index_name
+    
+    # Minimal guards here; full validation is step 2. Just prevent obviously
+    # broken adds (empty id, no index selected).
+    if (!nzchar(id)) {
+      shiny::showNotification("Bitte eine Sample_ID eingeben.", type = "warning")
+      return()
+    }
+    if (is.null(nm) || !nzchar(nm)) {
+      shiny::showNotification("Kein Index verfügbar/ausgewählt.", type = "warning")
+      return()
+    }
+    
+    seq <- resolve_index(index_tbl, nm)
+    
+    new_row <- data.frame(
+      sample_id      = id,
+      index_name     = nm,
+      i7             = seq$i7,
+      i5             = seq$i5,
+      sample_project = SAMPLE_PROJECT,
+      stringsAsFactors = FALSE
+    )
+    samples(rbind(samples(), new_row))
+    
+    # clear the id field for the next entry; index dropdown updates itself
+    shiny::updateTextInput(session, "sample_id", value = "")
+  })
+  
+  # --- Remove selected ------------------------------------------------------
+  shiny::observeEvent(input$remove_selected, {
+    sel <- input$samples_rows_selected
+    if (length(sel)) {
+      samples(samples()[-sel, , drop = FALSE])
+    }
+  })
+  
+  # --- Table ----------------------------------------------------------------
+  output$samples <- DT::renderDT(
+    {
+      df <- samples()
+      # friendlier column names for display; underlying data unchanged
+      names(df) <- c("Sample_ID", "IndexUDP (nur Vorschau)",
+                     "index", "index2", "Sample_Project")
+      df
+    },
+    selection = "single",
+    rownames  = FALSE,
+    options   = list(dom = "t", paging = FALSE)
+  )
+  
+  output$count_text <- shiny::renderText({
+    n <- nrow(samples())
+    sprintf("%d Probe%s im Lauf.", n, if (n == 1) "" else "n")
   })
 }
