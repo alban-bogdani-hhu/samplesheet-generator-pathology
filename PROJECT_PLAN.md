@@ -10,10 +10,10 @@
 | Owner | Alban Bogdani |
 | Organization | Institut für Humangenetik, UKD |
 | Repo | `samplesheet-generator-pathology` |
-| Current phase | Phase 2 — Validation (complete) |
+| Current phase | Phase 3 — Shiny UI (complete) |
 | Current branch | `develop` |
-| Version | `v0.2.0` |
-| Last updated | 2026-08-10 |
+| Version | `v0.3.0` |
+| Last updated | 2026-08-11 |
 
 ## Scope
 
@@ -162,9 +162,9 @@ templates/wes.csv          data/udp_indexes.csv
 - [x] Tests for each rule, including the reserved-word list
 
 ### Phase 3 — Shiny UI (`v0.3.0`)
-- [ ] Add / remove sample; dropdown excludes used indexes (F-1..F-3)
-- [ ] RunName field, validation messages, review table (F-4, F-8)
-- [ ] Download handler with sanitized filename (F-9)
+- [x] Add / remove sample; dropdown excludes used indexes (F-1..F-3)
+- [x] RunName field, validation messages, review table (F-4, F-8)
+- [x] Download handler with sanitized filename (F-9)
 
 ### Phase 4 — MVP release (`v1.0.0`)
 - [ ] `USER_GUIDE.md`, `INSTALL.md` finalised for the offline USB install

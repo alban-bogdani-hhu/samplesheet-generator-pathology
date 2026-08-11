@@ -3,6 +3,34 @@
 All notable changes to this project are documented here.
 Format follows [Keep a Changelog](https://keepachangelog.com/); versioning is semantic.
 
+## [0.3.0] - 2026-08-10
+
+### Added
+- Interactive Shiny UI (`R/ui.R`, `R/server.R`) covering the full flow:
+  - Enter a Sample_ID and pick an index; the sample is added with its i7/i5
+    resolved immediately and stored in the exact shape the generator expects.
+  - Searchable `selectizeInput` index dropdown (D-014): filter 96 indexes by
+    UDP name or by sequence, with the matching bases highlighted.
+  - Used indexes are excluded from the dropdown (D-010); removing a sample
+    returns its index to the list.
+  - Live two-tier validation with three-state signalling: pristine (green),
+    exportable-with-warnings (yellow + note), blocked (red).
+  - Optional RunName field; empty RunName exports as `NA` (D-002).
+  - Gated export: the download button is disabled via `shinyjs` (D-013) when
+    there are no samples or any errors, and the download handler re-validates
+    as a backstop, so no invalid sheet can ever be written.
+  - Exported file name follows `<RunName>-samplesheet.csv` (D-004).
+
+### Changed
+- `shinyjs` added as a runtime dependency, solely for export-button gating
+  (D-013) — an acceptable, safety-motivated exception to the minimal-dependency
+  rule (D-007).
+
+### Verified
+- End-to-end: the reference run, entered through the UI, exports a file
+  byte-identical to `tests/testthat/fixtures/reference-samplesheet.csv` — the
+  UI path produces the same output the tested core does.
+
 ## [0.2.0] - 2026-08-10
 
 ### Added
