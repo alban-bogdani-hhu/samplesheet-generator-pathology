@@ -53,8 +53,8 @@ app_server <- function(input, output, session) {
     id <- trimws(input$sample_id)
     nm <- input$index_name
     
-    # Minimal guards here; full validation is step 2. Just prevent obviously
-    # broken adds (empty id, no index selected).
+    # Minimal guards here; full validation is live below and gated at export.
+    # Just prevent obviously broken adds (empty id, no index selected).
     if (!nzchar(id)) {
       shiny::showNotification("Bitte eine Sample_ID eingeben.", type = "warning")
       return()
@@ -86,6 +86,57 @@ app_server <- function(input, output, session) {
     if (length(sel)) {
       samples(samples()[-sel, , drop = FALSE])
     }
+  })
+  
+  # --- Live validation ------------------------------------------------------
+  # Re-runs whenever the pool changes. Single source of truth for both the
+  # messages below and (step 3) the export gate, so they can never disagree.
+  validation <- shiny::reactive({
+    df <- samples()
+    if (nrow(df) == 0L) {
+      return(list(errors = character(0), warnings = character(0)))
+    }
+    validate_run(df, CONFIG)
+  })
+  
+  output$validation_msgs <- shiny::renderUI({
+    v <- validation()
+    
+    # pristine: no errors, no warnings, at least one sample
+    if (!length(v$errors) && !length(v$warnings)) {
+      if (nrow(samples()) > 0L) {
+        return(shiny::div(class = "text-success",
+                          shiny::tags$b("\u2713 Keine Probleme gefunden.")))
+      }
+      return(NULL)
+    }
+    
+    err_block <- if (length(v$errors)) {
+      shiny::div(
+        class = "text-danger",
+        shiny::tags$b("Fehler (verhindern den Export):"),
+        shiny::tags$ul(lapply(v$errors, shiny::tags$li))
+      )
+    }
+    
+    warn_block <- if (length(v$warnings)) {
+      shiny::div(
+        class = "text-warning",
+        shiny::tags$b("Warnungen (Export bleibt möglich):"),
+        shiny::tags$ul(lapply(v$warnings, shiny::tags$li))
+      )
+    }
+    
+    # shown only when there are warnings but NO errors: the run is exportable
+    # despite the warnings. Never shown alongside errors or when pristine.
+    export_note <- if (length(v$warnings) && !length(v$errors)) {
+      shiny::div(
+        class = "text-success",
+        shiny::tags$b("Hinweis: Der Lauf kann trotz Warnungen exportiert werden.")
+      )
+    }
+    
+    shiny::tagList(err_block, warn_block, export_note)
   })
   
   # --- Table ----------------------------------------------------------------

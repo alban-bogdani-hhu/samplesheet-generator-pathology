@@ -26,6 +26,11 @@ app_ui <- function() {
       DT::DTOutput("samples"),
       shiny::actionButton("remove_selected", "Ausgewählte Zeile entfernen",
                           class = "btn-outline-danger btn-sm")
+    ),
+    
+    bslib::card(
+      bslib::card_header("Prüfung"),
+      shiny::uiOutput("validation_msgs")
     )
   )
 }
