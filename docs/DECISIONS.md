@@ -26,6 +26,8 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 | D-012 | Only the **anonymized** reference sheet is committed as a test fixture | Real accession numbers in git history are effectively permanent, even in a private repo. | Active | Architectural — never commit real IDs |
 | D-013 | Added `shinyjs` as a runtime dependency, solely to disable the export button on invalid runs (no samples / validation errors) | Preventing an invalid clinical export from even starting is the correct gate; the download-handler guard alone still opened the OS save-dialog before refusing. `shinyjs` is small, standard, and installs cleanly offline — an acceptable exception to the minimal-dependency rule (D-007) for a safety-adjacent interaction. | Active | Remove `shinyjs`; revert to handler-guard-only |
 | D-014 | Index dropdown is a searchable `selectizeInput`; the label carries UDP name + both sequences so typing any of them filters | Selecting a barcode by eye among 96 rows was slow and error-prone in real use. Search by name or sequence makes assignment fast. No custom JS — built-in selectize search only. | Active | Revert to `selectInput` |
+| D-015 | No launcher script; the app is started manually via the .Rproj file | A double-click launcher would depend on each machine's R install path, undermining the goal of one self-contained version everyone installs identically, and adding a machine-dependent failure point to a clinical tool. Routine open is a few clicks weekly; one-time setup needs IT for R/RStudio regardless. | Active | A hosted deployment (Shiny Server) is the robust step-reduction path — a separate, larger decision |
+
 
 ## Open items
 
@@ -41,6 +43,10 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 | O-008 | Are index sets 2–4 ever used, or sets mixed within a run? (2.5) | Whether the frozen table needs to span plates | Ask with O-001 |
 | O-009 | Regulatory requirements — IVDR / accreditation / QM: versioning, logging, four-eyes release? (9.4) | Could add hard requirements late | Ask before Phase 4 |
 | O-010 | Inline editing of a row's Sample_ID in the preview table (fix a typo without remove-and-re-add). Scope: Sample_ID column only; edits must write back to the samples() reactiveVal; other columns stay locked to preserve UDP↔sequence integrity. | Nice-to-have, post-MVP | Deferred by Alban, 2026-08 |
+| O-011 | Selectable RunDescription in the UI (1.5B / 10B WES Pathologie Lauf) — R-1 | Next release | Kai, 2026-08 |
+| O-012 | WGS support: separate template + barcode table (drop-in per D-006) — R-2 | Next release | Kai, reference files pending |
+| O-013 | Optional lane splitting: template variant + per-sample Lane column in [BCLConvert_Data] — R-3 | Next release | Kai, reference files pending |
+
 ## Changelog
 
 - **2026-08-07** — D-001 … D-012 recorded; O-001 … O-009 opened. D-002 closed by Kai's answer.
