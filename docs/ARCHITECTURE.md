@@ -248,6 +248,11 @@ default. Reference files to be supplied by Kai.
 
 ---
 
+### Known bugs (to fix)
+
+- **B-1** — When the sample list is long, the "Ausgewählte Zeile entfernen"
+  button overlaps the scrolling table (layout issue). Reported by Kai.
+
 Older deferred items (re-import, inline Sample_ID editing, persistence,
 promoting the ID pattern to blocking) remain tracked in `docs/DECISIONS.md`
 open items, but are lower priority than R-1..R-3 above.

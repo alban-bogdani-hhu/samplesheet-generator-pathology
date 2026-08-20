@@ -46,6 +46,7 @@ Single source of truth for decisions taken, why, and **how to reverse them**.
 | O-011 | Selectable RunDescription in the UI (1.5B / 10B WES Pathologie Lauf) — R-1 | Next release | Kai, 2026-08 |
 | O-012 | WGS support: separate template + barcode table (drop-in per D-006) — R-2 | Next release | Kai, reference files pending |
 | O-013 | Optional lane splitting: template variant + per-sample Lane column in [BCLConvert_Data] — R-3 | Next release | Kai, reference files pending |
+| O-014 | Layout bug: when the sample table grows tall, the "Ausgewählte Zeile entfernen" button (placed after DTOutput inside the card) is overlapped by the scrolling table rows. Reported by Kai. Fix: move the button outside/above the scroll area, or give the table a fixed height with its own scroll. | Bug — fix next release | Kai, 2026-08 |
 
 ## Changelog
 
